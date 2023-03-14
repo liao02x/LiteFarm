@@ -50,6 +50,16 @@ describe('Task tests', () => {
       .end(callback);
   }
 
+  function pinTaskRequest({ user_id, farm_id }, data, task_id, callback) {
+    chai
+      .request(server)
+      .patch(`/task/pin/${task_id}`)
+      .set('user_id', user_id)
+      .set('farm_id', farm_id)
+      .send(data)
+      .end(callback);
+  }
+
   function postTaskRequest({ user_id, farm_id }, type, data, callback) {
     chai
       .request(server)
@@ -796,6 +806,166 @@ describe('Task tests', () => {
           expect(assignedTaskAfter.assignee_user_id).toBe(ownerUserId);
           expect(unassignedTask1After.assignee_user_id).toBe(null);
           expect(unassignedTask2After.assignee_user_id).toBe(null);
+          done();
+        },
+      );
+    });
+  });
+
+  describe('Patch pin task tests', () => {
+    test('Owners should be able to pin task', async (done) => {
+      const [{ user_id, farm_id }] = await mocks.userFarmFactory({}, fakeUserFarm(1));
+      const [{ task_id }] = await mocks.taskFactory({ promisedUser: [{ user_id }] });
+      const [{ location_id }] = await mocks.locationFactory({ promisedFarm: [{ farm_id }] });
+      await mocks.location_tasksFactory({
+        promisedTask: [{ task_id }],
+        promisedField: [{ location_id }],
+      });
+      pinTaskRequest(
+        { user_id, farm_id },
+        { pinned: true },
+        task_id,
+        async (err, res) => {
+          expect(res.status).toBe(200);
+          const updated_task = await getTask(task_id);
+          expect(updated_task.pinned).toBe(true);
+          pinTaskRequest(
+            { user_id, farm_id },
+            { pinned: false },
+            task_id,
+            async (err, res) => {
+              expect(res.status).toBe(200);
+              const updated_task = await getTask(task_id);
+              expect(updated_task.pinned).toBe(false);
+              done();
+            },
+          );
+        },
+      );
+    });
+
+    test('Managers should be able to pin task', async (done) => {
+      const [{ user_id, farm_id }] = await mocks.userFarmFactory({}, fakeUserFarm(2));
+      const [{ task_id }] = await mocks.taskFactory({ promisedUser: [{ user_id }] });
+      const [{ location_id }] = await mocks.locationFactory({ promisedFarm: [{ farm_id }] });
+      await mocks.location_tasksFactory({
+        promisedTask: [{ task_id }],
+        promisedField: [{ location_id }],
+      });
+      pinTaskRequest(
+        { user_id, farm_id },
+        { pinned: true },
+        task_id,
+        async (err, res) => {
+          expect(res.status).toBe(200);
+          const updated_task = await getTask(task_id);
+          expect(updated_task.pinned).toBe(true);
+          pinTaskRequest(
+            { user_id, farm_id },
+            { pinned: false },
+            task_id,
+            async (err, res) => {
+              expect(res.status).toBe(200);
+              const updated_task = await getTask(task_id);
+              expect(updated_task.pinned).toBe(false);
+              done();
+            },
+          );
+        },
+      );
+    });
+
+    test('EO should be able to pin task', async (done) => {
+      const [{ user_id, farm_id }] = await mocks.userFarmFactory({}, fakeUserFarm(5));
+      const [{ task_id }] = await mocks.taskFactory({ promisedUser: [{ user_id }] });
+      const [{ location_id }] = await mocks.locationFactory({ promisedFarm: [{ farm_id }] });
+      await mocks.location_tasksFactory({
+        promisedTask: [{ task_id }],
+        promisedField: [{ location_id }],
+      });
+      pinTaskRequest(
+        { user_id, farm_id },
+        { pinned: true },
+        task_id,
+        async (err, res) => {
+          expect(res.status).toBe(200);
+          const updated_task = await getTask(task_id);
+          expect(updated_task.pinned).toBe(true);
+          pinTaskRequest(
+            { user_id, farm_id },
+            { pinned: false },
+            task_id,
+            async (err, res) => {
+              expect(res.status).toBe(200);
+              const updated_task = await getTask(task_id);
+              expect(updated_task.pinned).toBe(false);
+              done();
+            },
+          );
+        },
+      );
+    });
+
+    test('Worker should not be able to pin task', async (done) => {
+      const [{ user_id, farm_id }] = await mocks.userFarmFactory({}, fakeUserFarm(3));
+      const [{ task_id }] = await mocks.taskFactory({ promisedUser: [{ user_id }] });
+      const [{ location_id }] = await mocks.locationFactory({ promisedFarm: [{ farm_id }] });
+      await mocks.location_tasksFactory({
+        promisedTask: [{ task_id }],
+        promisedField: [{ location_id }],
+      });
+      pinTaskRequest(
+        { user_id, farm_id },
+        { pinned: true },
+        task_id,
+        async (err, res) => {
+          expect(res.status).toBe(403);
+          done();
+        },
+      );
+    });
+
+    test('Should not be able to pin completed tasks', async (done) => {
+      const [{ user_id, farm_id }] = await mocks.userFarmFactory({}, fakeUserFarm(1));
+      const fakeTask = mocks.fakeTask({
+        assignee_user_id: user_id,
+        complete_date: faker.date.future(),
+      });
+      const [{ task_id }] = await mocks.taskFactory({ promisedUser: [{ user_id }] }, fakeTask);
+      const [{ location_id }] = await mocks.locationFactory({ promisedFarm: [{ farm_id }] });
+      await mocks.location_tasksFactory({
+        promisedTask: [{ task_id }],
+        promisedField: [{ location_id }],
+      });
+      pinTaskRequest(
+        { user_id, farm_id },
+        { pinned: true },
+        task_id,
+        async (err, res) => {
+          expect(res.status).toBe(400);
+          done();
+        },
+      );
+    });
+
+    test('Should not be able to pin abandoned tasks', async (done) => {
+      const [{ user_id, farm_id }] = await mocks.userFarmFactory({}, fakeUserFarm(1));
+      const fakeTask = mocks.fakeTask({
+        assignee_user_id: user_id,
+        abandon_date: faker.date.future(),
+      });
+      const [{ task_id }] = await mocks.taskFactory({ promisedUser: [{ user_id }] }, fakeTask);
+      const [{ location_id }] = await mocks.locationFactory({ promisedFarm: [{ farm_id }] });
+      await mocks.location_tasksFactory({
+        promisedTask: [{ task_id }],
+        promisedField: [{ location_id }],
+      });
+      pinTaskRequest(
+        { user_id, farm_id },
+        { pinned: true },
+        task_id,
+        async (err, res) => {
+          expect(res.status).toBe(400);
           done();
         },
       );

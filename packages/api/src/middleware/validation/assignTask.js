@@ -17,6 +17,7 @@ import userFarmModel from '../../models/userFarmModel.js';
 
 import TaskModel from '../../models/taskModel.js';
 
+// 1: owner, 2: manager, 5: extension officer
 const adminRoles = [1, 2, 5];
 
 async function validateAssigneeId(req, res, next) {
@@ -45,6 +46,20 @@ async function validateAssigneeId(req, res, next) {
   return next();
 }
 
+async function validatePinTask(req, res, next) {
+  const { task_id } = req.params;
+  if (!adminRoles.includes(req.role)) {
+    return res.status(403).send('Not authorized to pin this task');
+  }
+
+  const checkTaskStatus = await TaskModel.getTaskStatus(task_id);
+  if (checkTaskStatus.complete_date || checkTaskStatus.abandon_date) {
+    return res.status(400).send('Task has already been completed or abandoned');
+  }
+
+  return next();
+}
+
 async function checkTaskStatusForAssignment(req, res, next) {
   const { task_id } = req.params;
 
@@ -68,4 +83,4 @@ async function checkTaskStatusForAssignment(req, res, next) {
   next();
 }
 
-export { validateAssigneeId, checkTaskStatusForAssignment };
+export { validateAssigneeId, validatePinTask, checkTaskStatusForAssignment };

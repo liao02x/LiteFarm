@@ -140,6 +140,21 @@ const taskController = {
     }
   },
 
+  async pinTask(req, res) {
+    try {
+      const { task_id } = req.params;
+      const { pinned = false } = req.body;
+
+      const result = await TaskModel.pinTask(task_id, pinned, req.user);
+      if (!result) return res.status(404).send('Task not found');
+
+      return res.sendStatus(200);
+    } catch (error) {
+      console.log(error);
+      return res.status(400).json({ error });
+    }
+  },
+
   async patchTaskDate(req, res) {
     try {
       const { task_id } = req.params;

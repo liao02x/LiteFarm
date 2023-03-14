@@ -80,6 +80,7 @@ class TaskModel extends BaseModel {
         other_abandonment_reason: { type: ['string', null] },
         abandonment_notes: { type: ['string', null], maxLength: 10000 },
         override_hourly_wage: { type: 'boolean' },
+        pinned: { type: 'boolean' },
         ...super.baseProperties,
       },
       additionalProperties: false,
@@ -315,6 +316,21 @@ class TaskModel extends BaseModel {
       })
       .whereIn('task_id', taskIds);
   }
+
+  /**
+   * Set pinned of the task to the given pinned.
+   * @param {uuid} taskId - the ID of the task
+   * @param {boolean} pinned - true if set to pinned, false if set to not pinned
+   * @param {Object} user - the user who requested this task assignment
+   * @static
+   * @async
+   * @returns {Object} - Task Object
+   */
+    static async pinTask(taskId, pinned, user) {
+      return await TaskModel.query()
+        .context(user)
+        .patchAndFetchById(taskId, { pinned });
+    }
 
   /**
    * Checks whether a given user in a given farm has tasks that are due today.

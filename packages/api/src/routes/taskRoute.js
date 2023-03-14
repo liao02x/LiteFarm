@@ -21,6 +21,7 @@ import checkScope from '../middleware/acl/checkScope.js';
 import { modelMapping, isWorkerToSelfOrAdmin } from '../middleware/validation/task.js';
 import {
   validateAssigneeId,
+  validatePinTask,
   checkTaskStatusForAssignment,
 } from '../middleware/validation/assignTask.js';
 import taskController from '../controllers/taskController.js';
@@ -42,6 +43,14 @@ router.patch(
   validateAssigneeId,
   checkTaskStatusForAssignment,
   taskController.assignAllTasksOnDate,
+);
+
+router.patch(
+  '/pin/:task_id',
+  hasFarmAccess({ params: 'task_id' }),
+  checkScope(['edit:task']),
+  validatePinTask,
+  taskController.pinTask,
 );
 
 router.patch(
