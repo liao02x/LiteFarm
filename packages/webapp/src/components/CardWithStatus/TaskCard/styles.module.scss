@@ -29,6 +29,10 @@
   margin: 0;
   font-weight: 600;
   margin-bottom: 4px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
 }
 
 .subMain {
@@ -87,4 +91,32 @@
 .unassigned {
   color: var(--red700);
   border-bottom: 1px solid var(--red700);
+}
+
+.pinDropdown {
+  padding: 6px 8px;
+  cursor: pointer;
+
+  & > span {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.pinDropdownContent {
+  display: flex;
+  border-radius: 4px;
+  background-color: var(--grey400);
+  padding: 2px 6px;
+  transition: background-color 0.2s ease-in-out;
+
+  &:hover {
+    background-color: var(--grey500);
+  }
+}
+
+.pinned {
+  color: var(--teal700)
 }

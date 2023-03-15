@@ -9,6 +9,7 @@ import UpdateTaskDateModal from '../../../components/Modals/UpdateTaskDateModal'
 import {
   assignTask,
   assignTasksOnDate,
+  pinTask,
   changeTaskDate,
   changeTaskWage,
   updateUserFarmWage,
@@ -39,6 +40,7 @@ const TaskCard = ({
   };
   const onAssignTasksOnDate = (task) => dispatch(assignTasksOnDate(task));
   const onAssignTask = (task) => dispatch(assignTask(task));
+  const onPinTask = (pinned) => dispatch(pinTask({ task_id, pinned }));
   const onUpdateUserFarmWage = (user) => dispatch(updateUserFarmWage(user));
   const onSetUserFarmWageDoNotAskAgain = (user) => {
     dispatch(setUserFarmWageDoNotAskAgain(user));
@@ -84,11 +86,13 @@ const TaskCard = ({
             setShowDateAssignModal(true);
           }
         }}
+        onPinTask={onPinTask}
         selected={selected}
         happiness={happiness}
         classes={classes}
         isAdmin={isAdmin}
         isAssignee={isAssignee}
+        isPinned={props['pinned']}
       />
       {showTaskAssignModal && (
         <TaskQuickAssignModal

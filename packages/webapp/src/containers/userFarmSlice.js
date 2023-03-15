@@ -17,6 +17,7 @@ export function onLoadingSuccess(state) {
   state.loaded = true;
 }
 
+// 1: owner, 2: manager, 5: extension officer
 const adminRoles = [1, 2, 5];
 
 export const initialState = {

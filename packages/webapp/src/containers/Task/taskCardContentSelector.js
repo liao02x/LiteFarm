@@ -24,38 +24,61 @@ const getTaskContents = (tasks, userFarmEntities, { farm_id }) => {
       abandon_date: task.abandon_date,
       date: task.abandon_date || task.complete_date || task.due_date,
       wage_at_moment: task.wage_at_moment,
+      pinned: task.pinned,
     };
   });
 };
 
-export const sortTaskCardContent = (taskCardContents, isAscending = true) =>
-  taskCardContents.sort((taskA, taskB) => {
-    const order = isAscending ? 1 : -1;
-    const bottomTwoStatus = ['completed', 'abandoned'];
-    if (!bottomTwoStatus.includes(taskA.status) && bottomTwoStatus.includes(taskB.status)) {
-      return -1;
-    }
-    if (
-      taskA.status === 'completed' &&
-      taskB.status === 'abandoned' &&
-      taskA.status !== 'abandoned' &&
-      taskB.status !== 'completed'
-    ) {
-      return -1;
-    }
-    if (!bottomTwoStatus.includes(taskA.status) && !bottomTwoStatus.includes(taskB.status)) {
-      return (new Date(taskA.date).getTime() - new Date(taskB.date).getTime()) * order;
-    }
-    if (taskA.status === 'completed' && taskB.status === 'completed') {
-      return (new Date(taskA.date).getTime() - new Date(taskB.date).getTime()) * order;
-    }
-    if (taskA.status === 'abandoned' && taskB.status === 'abandoned') {
-      return (
-        (new Date(taskA.abandon_date).getTime() - new Date(taskB.abandon_date).getTime()) * order
-      );
-    }
+// pinned tasks are always on top
+const compTaskPinned = (taskA, taskB) => {
+  if (taskA.pinned && !taskB.pinned) {
+    return -1;
+  }
+  if (!taskA.pinned && taskB.pinned) {
     return 1;
+  }
+  return 0;
+};
+
+// original way of sorting tasks
+const compTaskOrder = (taskA, taskB, isAscending) => {
+  const order = isAscending ? 1 : -1;
+  const bottomTwoStatus = ['completed', 'abandoned'];
+  if (!bottomTwoStatus.includes(taskA.status) && bottomTwoStatus.includes(taskB.status)) {
+    return -1;
+  }
+  if (
+    taskA.status === 'completed' &&
+    taskB.status === 'abandoned' &&
+    taskA.status !== 'abandoned' &&
+    taskB.status !== 'completed'
+  ) {
+    return -1;
+  }
+  if (!bottomTwoStatus.includes(taskA.status) && !bottomTwoStatus.includes(taskB.status)) {
+    return (new Date(taskA.date).getTime() - new Date(taskB.date).getTime()) * order;
+  }
+  if (taskA.status === 'completed' && taskB.status === 'completed') {
+    return (new Date(taskA.date).getTime() - new Date(taskB.date).getTime()) * order;
+  }
+  if (taskA.status === 'abandoned' && taskB.status === 'abandoned') {
+    return (
+      (new Date(taskA.abandon_date).getTime() - new Date(taskB.abandon_date).getTime()) * order
+    );
+  }
+  return 1;
+};
+
+export const sortTaskCardContent = (taskCardContents, isAscending = true, pinnedOnly = false) => {
+  return taskCardContents.sort((taskA, taskB) => {
+    const pinnedOrder = compTaskPinned(taskA, taskB);
+    // one of the tasks is pinned or only pinned tasks are being sorted
+    if (pinnedOrder !== 0 || pinnedOnly) return pinnedOrder;
+
+    // both tasks are not pinned, sort by original order
+    return compTaskOrder(taskA, taskB, isAscending);
   });
+};
 
 export const taskCardContentSelector = createSelector(
   [tasksSelector, userFarmEntitiesSelector, loginSelector],
@@ -66,7 +89,7 @@ export const manualFilteredTaskCardContentSelector = (filter) =>
   createSelector(
     [tasksSelector, userFarmEntitiesSelector, loginSelector],
     (tasks, userFarmEntities, userFarm) =>
-      getTaskContents(filter(tasks), userFarmEntities, userFarm),
+      sortTaskCardContent(getTaskContents(filter(tasks), userFarmEntities, userFarm), null, true),
   );
 
 export const filteredTaskCardContentSelector = createSelector(
