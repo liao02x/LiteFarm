@@ -141,6 +141,22 @@ export function* assignTaskOnDateSaga({ payload: { task_id, date, assignee_user_
   }
 }
 
+export const pinTask = createAction('pinTaskSaga');
+
+export function* pinTaskSaga({ payload: { task_id, pinned } }) {
+  const { taskUrl } = apiConfig;
+  let { user_id, farm_id } = yield select(loginSelector);
+  const header = getHeader(user_id, farm_id);
+  try {
+    yield call(axios.patch, `${taskUrl}/pin/${task_id}`, { pinned }, header);
+    yield put(putTaskSuccess({ pinned, task_id }));
+    yield put(enqueueSuccessSnackbar(i18n.t('message:TASK.UPDATE.SUCCESS')));
+  } catch (e) {
+    console.log(e);
+    yield put(enqueueErrorSnackbar(i18n.t('message:TASK.UPDATE.FAILED')));
+  }
+}
+
 export const changeTaskDate = createAction('changeTaskDateSaga');
 
 export function* changeTaskDateSaga({ payload: { task_id, due_date } }) {
@@ -815,6 +831,7 @@ export function* addCustomHarvestUseSaga({ payload: data }) {
 export default function* taskSaga() {
   yield takeLeading(addCustomTaskType.type, addTaskTypeSaga);
   yield takeLeading(assignTask.type, assignTaskSaga);
+  yield takeLeading(pinTask.type, pinTaskSaga);
   yield takeLeading(changeTaskDate.type, changeTaskDateSaga);
   yield takeLeading(changeTaskWage.type, changeTaskWageSaga);
   yield takeLeading(updateUserFarmWage.type, updateUserFarmWageSaga);

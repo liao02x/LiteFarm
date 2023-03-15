@@ -110,3 +110,16 @@ AbandonedSelected.args = {
   status: 'abandoned',
   selected: true,
 };
+
+export const Pinned = Template.bind({});
+Pinned.args = {
+  ...templateData,
+  isPinned: true,
+};
+
+export const PinnedAdmin = Template.bind({});
+PinnedAdmin.args = {
+  ...templateData,
+  isPinned: true,
+  isAdmin: true,
+};

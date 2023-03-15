@@ -1,5 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { MdMoreHoriz } from 'react-icons/md';
+import { BsPinAngle, BsPinAngleFill } from 'react-icons/bs';
+import Dropdown from '../../Dropdown';
 import { ReactComponent as CalendarIcon } from '../../../assets/images/task/Calendar.svg';
 import { ReactComponent as UnassignedIcon } from '../../../assets/images/task/Unassigned.svg';
 import styles from './styles.module.scss';
@@ -43,11 +46,13 @@ export const PureTaskCard = ({
   onClick = null,
   onClickAssignee = null,
   onClickCompleteOrDueDate = null,
+  onPinTask = null,
   selected,
   happiness,
   classes = { card: {} },
   isAdmin,
   isAssignee,
+  isPinned,
   ...props
 }) => {
   const { t } = useTranslation();
@@ -93,6 +98,30 @@ export const PureTaskCard = ({
       <div className={styles.info}>
         <div className={styles.mainTypographySansColor}>
           {t(`task:${taskType.task_translation_key}`)}
+          {isPinned && <BsPinAngleFill className={styles.pinned} />}
+          {isAdmin && (
+            <Dropdown
+              content={
+                <div className={styles.pinDropdownContent}>
+                  <MdMoreHoriz />
+                </div>
+              }
+            >
+              <div className={styles.pinDropdown} onClick={() => onPinTask(!isPinned)}>
+                {isPinned ? (
+                  <span>
+                    Unpin
+                    <BsPinAngle />
+                  </span>
+                ) : (
+                  <span>
+                    Pin
+                    <BsPinAngleFill className={styles.pinned} />
+                  </span>
+                )}
+              </div>
+            </Dropdown>
+          )}
         </div>
         <div className={styles.subMain}>
           {locationName || t('TASK.CARD.MULTIPLE_LOCATIONS')}
